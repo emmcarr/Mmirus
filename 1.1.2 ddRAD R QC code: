@@ -1,0 +1,156 @@
+1.1.2 ddRAD R QC CODE
+
+## analysing multi-species data for M. mirus work
+## starting with stacks catalogue generated against mbidens genome
+
+## These loci have been generated using the algorithm of Maruki & Lynch 2015 that accounts for sequencing quality, 
+## allele balance and population-level allele frequencies. The genotyping process required the SNP and genotyping 
+## calling likelihood alpha value to be 0.01 (see 1.1.1), ensuring only high quality variants were called. This process 
+## takes these putative high quality genotype calls and filters them using the principles of Puritz et al (2018)
+
+## directory: /nesi/nobackup/uoa02626/bw_ddrad/mbid_gen/pops
+
+## this process uses the vcf.populations.snps.vcf file that has one row per SNP, but can have multiple lines per RAD locus.
+
+# Step 1. Filter genotypes with genotype quality < 20 and minimun depth of 5
+system("vcftools --vcf populations.snps.vcf --out out.1 --minDP 5 --minGQ 20 --recode --recode-INFO-all")
+
+## count number of remaining loci
+system("egrep -v '^#' out.1.recode.vcf > bald.out.1.recode.vcf")
+## grab the third column, ie locus ID
+system("cut bald.out.1.recode.vcf -f 3 > 1.loci.number")
+## cut it so that you only have locus, not variable site, sort, list and count unique values
+system("cut 1.loci.number -d ':' -f 1 | sort -u | wc -l")
+
+# Step 2. Filter out sites that were made monomorphic by the previous filter
+system("vcftools --vcf out.1.recode.vcf --maf 0.001 --out out.2 --recode --recode-INFO-all")
+
+## count number of remaining loci
+system("egrep -v '^#' out.2.recode.vcf > bald.out.2.recode.vcf")
+## grab the third column, ie locus ID
+system("cut bald.out.2.recode.vcf -f 3 > 2.loci.number")
+## cut it so that you only have locus, not variable site, sort, list and count unique values
+system("cut 2.loci.number -d ':' -f 1 | sort -u | wc -l")
+
+
+# Step 3. Remove sites with more than 50% missing data
+system("vcftools --vcf out.2.recode.vcf --out out.3 --max-missing 0.5 --recode --recode-INFO-all")
+
+## count number of remaining loci
+system("egrep -v '^#' out.3.recode.vcf > bald.out.3.recode.vcf")
+## grab the third column, ie locus ID
+system("cut bald.out.3.recode.vcf -f 3 > 3.loci.number")
+## cut it so that you only have locus, not variable site, sort, list and count unique values
+system("cut 3.loci.number -d ':' -f 1 | sort -u | wc -l")
+
+
+# Cannot remove loci with extreme allele balance or filter by SNP quality as CH did
+# but this is accounted for by the genotype calling algorithm 
+
+# Produce a file with missingness per individual
+system("vcftools --vcf out.3.recode.vcf --out out.3 --missing-indv")
+
+out_3_imiss <- read_tsv("out.3.imiss")
+
+species<-c(rep("zcav", 50), rep("mmir", 14), rep("mden", 34), rep("mbid", 29))
+missingness<-cbind(out_3_imiss, species)
+missplot<-melt(missingness[,c(1,5,6)])
+Species<-c("zcav", "mmir", "mden", "mbid")
+missplot<-within(missplot,species<-factor(species,levels=Species))
+
+b<-ggplot(data=missplot, aes(x=INDV, y=value, fill=species))
+b<-b+geom_bar(stat = "identity")
+b<-b+theme(axis.text.x = element_text(size=6, angle = 90),
+           axis.text.y = element_text(size=10),
+           legend.text=element_text(size=10),
+           legend.title=element_blank()) +
+  ggtitle("Missing data per sample") +
+  labs(y = "Initial missing proportion") +
+  ylim(0, 1)
+
+pdf("missingness_per_sample.initial.pdf")
+b
+dev.off()
+
+# Select individuals with more than 50% missing data
+
+miss_50 <- filter(out_3_imiss, F_MISS > 0.5) %>%
+  select(INDV)
+
+# Write the individuals to remove to a file
+write_delim(miss_50, "remove.3.inds", col_names = FALSE)
+
+# Write the individuals to remove to a file
+write_delim(miss_50, "remove.3.inds", col_names = FALSE)
+
+#Step4: Remove individuals with >50% missing data
+system("vcftools --vcf out.3.recode.vcf --out out.4 --remove remove.3.inds --recode --recode-INFO-all")
+
+# Calculate site depth
+system("vcftools --vcf out.4.recode.vcf --site-depth --out out.5")
+
+site_depth_5 <- read_tsv("out.5.ldepth") %>%
+  mutate(MEAN_DEPTH = SUM_DEPTH / 119)
+
+# Step 5: Filter out loci with a mean site depth > 3x the overall mean
+mean_site_depth_5 <- mean(site_depth_5$MEAN_DEPTH)
+to_keep_5 <- filter(site_depth_5, MEAN_DEPTH < 3 * mean_site_depth_5)
+mean_site_depth_5_filt <- mean(to_keep_5$MEAN_DEPTH)
+
+# Plot the distribution again
+pdf("meandepth_per_locus.S5initial.pdf")
+qplot(to_keep_5$MEAN_DEPTH)
+dev.off()
+
+# Make a list of the sites to filter
+to_filter_5 <- filter(site_depth_5, MEAN_DEPTH >= 3 * mean_site_depth_5) %>%
+  select(CHROM, POS)
+
+# Write the sites to remove to a file
+write_delim(to_filter_5, "remove.5.sites", col_names = FALSE)
+
+# Remove the sites with VCFtools
+system("vcftools --vcf out.4.recode.vcf --out out.5 --exclude-positions remove.5.sites --recode --recode-INFO-all")
+
+## count number of remaining loci
+system("egrep -v '^#' out.5.recode.vcf > bald.out.5.recode.vcf")
+## grab the third column, ie locus ID
+system("cut bald.out.5.recode.vcf -f 3 > 5.loci.number")
+## cut it so that you only have locus, not variable site, sort, list and count unique values
+system("cut 5.loci.number -d ':' -f 1 | sort -u | wc -l")
+
+## Step 6: create whitelist of loci
+system("cut bald.out.5.recode.vcf -f 3 > 5.loci.number")
+system("cut 5.loci.number -d ':' -f 1 | sort -u > whitelist.loci")
+
+##Step 7
+## re-look at sample-missingness with this whitelist
+
+system("vcftools --vcf out.5.recode.vcf --out out.6 --missing-indv")
+
+out_6_imiss <- read_tsv("out.6.imiss")
+
+species<-c(rep("zcav", 47), rep("mmir", 11), rep("mden", 32), rep("mbid", 29))
+missingness<-cbind(out_6_imiss, species)
+missplot<-melt(missingness[,c(1,5,6)])
+Species<-c("zcav", "mmir", "mden", "mbid")
+missplot<-within(missplot,species<-factor(species,levels=Species))
+
+c<-ggplot(data=missplot, aes(x=INDV, y=value, fill=species))
+c<-c+geom_bar(stat = "identity")
+c<-c+theme(axis.text.x = element_text(size=6, angle = 90),
+           axis.text.y = element_text(size=10),
+           legend.text=element_text(size=10),
+           legend.title=element_blank()) +
+  ggtitle("Missing data per sample") +
+  labs(y = "Initial missing proportion") +
+  ylim(0, 1)
+
+c
+
+pdf("missingness_per_sample.step7.pdf")
+b
+dev.off()
+
+
+
