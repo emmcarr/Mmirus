@@ -1,0 +1,117 @@
+## The SNP data for both the multispecies SNP phylogeny and the population genomics assessments were from ddRAD data
+## the ddRAD data were analysed using stacks 2.41 and custom R code to filter samples and loci. This process was the same
+## for both the M. mirus and multispecies SNP datasets and it outlined here.
+
+## Stacks v2.41 analysis
+## This comprises the following steps: 
+## 1. demultiplexing
+## 2. aligning to reference genome and sorting reads
+## 3. reference guided calling of variable sites and genotypes by Stacks
+## 
+
+## DEMULTIPLEXING
+## Samples were demultiplexed, trimmed and filtered for quality using stacks command process radtags
+## example bash script:
+
+#!/bin/bash -e
+
+#SBATCH --account=uoa02626
+#SBATCH --job-name=DemupZC3
+#SBATCH -n 1
+#SBATCH --cpus-per-task=6
+#SBATCH --time=6:00:00
+#SBATCH --mem=52G
+#SBATCH --hint=nomultithread
+#SBATCH --partition=large
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=e.carroll@auckland.ac.nz
+#SBATCH -N 1
+
+module load Stacks/2.41-gimkl-2018b 
+
+
+# demultiplex fastq files name that start with ZC1...ZC5 with barcode files named similarly
+for i in {11..15}
+	do
+	process_radtags \
+	-1 /nesi/nobackup/uoa02626/OtherSp/Zcav/Zcav2018_3/ZC${i}_R1_001.fastq.gz \
+	-2 /nesi/nobackup/uoa02626/OtherSp/Zcav/Zcav2018_3/ZC${i}_R2_001.fastq.gz \
+	-o /nesi/nobackup/uoa02626/bw_ddrad/trimmed/ \
+	-b /nesi/nobackup/uoa02626/barcodes/bw/BarcodeZC${i}.txt \
+	--renz_1 hindIII --renz_2 mspI -t 90 -i gzfastq -y gzfastq
+
+done
+
+## ALIGNING AND SORTING READS
+## Reads were aligned against the M. bidens genome
+
+## Used a wrapper to get a list of all the unique samples that have been demultiplexed and then aligned and sort
+## Wrapper bash script
+samples=$(ls /nesi/nobackup/uoa02626/bw_ddrad/srw_gen/trimmed | cut -d '.' -f 1 | sort -u)
+
+for s in ${samples}
+do
+sbatch /nesi/nobackup/uoa02626/scripts/MbidAlignedSort_mapwrap1_jobfile.sh ${s}
+done
+
+## bash script being called and run on each sample:
+#!/bin/bash -e
+
+#SBATCH --account=uoa02626
+#SBATCH --job-name=map_rap1_Mbid_aligned_sort
+#SBATCH -n 1
+#SBATCH --time=4:00:00
+#SBATCH --mem=5G
+#SBATCH --hint=nomultithread
+#SBATCH --partition=large
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=e.carroll@auckland.ac.nz
+#SBATCH -N 1
+
+module load BWA/0.7.17-gimkl-2017a
+
+module load SAMtools/1.9-GCC-7.4.0
+
+samplename=$1
+
+samtools view -h -S -b /nesi/nobackup/uoa02626/bw_ddrad/mbid_gen/align/${samplename}_aln.sam -o \
+/nesi/nobackup/uoa02626/bw_ddrad/mbid_gen/align/${samplename}_aln.bam 
+
+samtools sort -m 2G /nesi/nobackup/uoa02626/bw_ddrad/mbid_gen/align/${samplename}_aln.bam \
+-T /nesi/nobackup/uoa02626/bw_ddrad/mbid_gen/sort/${samplename} \
+-o /nesi/nobackup/uoa02626/bw_ddrad/mbid_gen/sort/${samplename}_alnS.bam
+
+## REFERENCE GUIDED VARIABLE SITE AND GENOTYPE CALLIING
+## Variable sites and genotypes were called using stacks v2.41 command gstacks
+
+
+#!/bin/bash -e
+
+#SBATCH --account=uoa02626
+#SBATCH --job-name=gstacks_bwmbid
+#SBATCH -n 1
+#SBATCH --cpus-per-task=6
+#SBATCH --time=6:00:00
+#SBATCH --mem=70G
+#SBATCH --hint=nomultithread
+#SBATCH --partition=bigmem
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=e.carroll@auckland.ac.nz
+#SBATCH -N 1
+
+module load Stacks/2.41-gimkl-2018b 
+
+     	## analyse all samples with gstacks
+      	gstacks -M /nesi/nobackup/uoa02626/bw_ddrad/popmap/bw_popmap_multisp \
+      	-I /nesi/nobackup/uoa02626/bw_ddrad/mbid_gen/sort/ \
+      	-O /nesi/nobackup/uoa02626/bw_ddrad/mbid_gen/catalogued/ \
+      	--min-mapq 10 --var-alpha 0.01 --gt-alpha 0.01 --max-clipped 0.1 -t 6
+      	
+      	## run populations to get all loci for initial QC
+      	populations -P /nesi/nobackup/uoa02626/bw_ddrad/mbid_gen/catalogued/ \
+      	-M /nesi/nobackup/uoa02626/bw_ddrad/popmap/bw_popmap_multisp \
+      	-O /nesi/nobackup/uoa02626/bw_ddrad/mbid_gen/pops/ \
+      	-t 6 --vcf --hwe --genepop --structure
+
+
+
