@@ -1,3 +1,4 @@
+1.1.1 STACKS PIPELINE
 ## The SNP data for both the multispecies SNP phylogeny and the population genomics assessments were from ddRAD data
 ## the ddRAD data were analysed using stacks 2.41 and custom R code to filter samples and loci. This process was the same
 ## for both the M. mirus and multispecies SNP datasets and it is outlined here.
