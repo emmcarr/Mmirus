@@ -1,13 +1,13 @@
 ## The SNP data for both the multispecies SNP phylogeny and the population genomics assessments were from ddRAD data
 ## the ddRAD data were analysed using stacks 2.41 and custom R code to filter samples and loci. This process was the same
-## for both the M. mirus and multispecies SNP datasets and it outlined here.
+## for both the M. mirus and multispecies SNP datasets and it is outlined here.
 
 ## Stacks v2.41 analysis
 ## This comprises the following steps: 
 ## 1. demultiplexing
 ## 2. aligning to reference genome and sorting reads
 ## 3. reference guided calling of variable sites and genotypes by Stacks
-## 
+## 4. export files for initial QC check in R
 
 ## DEMULTIPLEXING
 ## Samples were demultiplexed, trimmed and filtered for quality using stacks command process radtags
@@ -30,7 +30,7 @@
 module load Stacks/2.41-gimkl-2018b 
 
 
-# demultiplex fastq files name that start with ZC1...ZC5 with barcode files named similarly
+# demultiplex fastq files name that start with ZC11...ZC15 with barcode files named similarly
 for i in {11..15}
 	do
 	process_radtags \
@@ -83,6 +83,7 @@ samtools sort -m 2G /nesi/nobackup/uoa02626/bw_ddrad/mbid_gen/align/${samplename
 
 ## REFERENCE GUIDED VARIABLE SITE AND GENOTYPE CALLIING
 ## Variable sites and genotypes were called using stacks v2.41 command gstacks
+## in the same script also call populations command which outputs files to take to R for inital QC
 
 
 #!/bin/bash -e
