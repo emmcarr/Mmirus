@@ -120,8 +120,58 @@ system("cut bald.out.5.recode.vcf -f 3 > 5.loci.number")
 system("cut 5.loci.number -d ':' -f 1 | sort -u | wc -l")
 
 ## Step 6: create whitelist of loci
-system("cut bald.out.5.recode.vcf -f 3 > 5.loci.number")
-system("cut 5.loci.number -d ':' -f 1 | sort -u > whitelist.loci")
+
+## at various steps sites have been removed - but also need to make sure the loci 
+## these sites are in have been removed. sometimes another site in a locus makes it through QC
+
+## to do this we need a list of the chrom pos and stacks ID for all markers
+## this is in populations.snps.vcf
+system("egrep -v '^#' populations.snps.vcf > bald.out.all.recode.vcf")
+system("cut bald.out.all.recode.vcf -f 1,2,3 > loc.coord")
+
+
+## read into R the chros, pos and ID
+loc.pos<-read.delim("loc.coord", head = FALSE)
+stacks.pos.all<-as.data.frame(loc.pos[,3])
+stacks.pos.all<-separate(stacks.pos.all, col=1,sep=":", into = c("s.loc", "s.pos"))
+stacks.pos.allele.all<-cbind(loc.pos[,1:2], stacks.pos.all)
+colnames(stacks.pos.allele.all)<-c("CHROM", "POS", "s.loc", "s.pos")
+
+loci.all<-unite(stacks.pos.allele.all, "chrom_pos", 1:2, sep = "_", remove = FALSE)
+
+## now we get the info fo r
+system("cut bald.out.5.recode.vcf -f 1,2,3 > loc.coord.initialWL")
+loc.pos.initialWL<-read.delim("loc.coord.initialWL", head = FALSE)
+stacks.pos.qc1<-as.data.frame(loc.pos.initialWL[,3])
+stacks.pos.qc1<-separate(stacks.pos.qc1, col=1,sep=":", into = c("s.loc", "s.pos"))
+stacks.pos.qc1.1<-cbind(loc.pos.initialWL[,1:2], stacks.pos.qc1)
+colnames(stacks.pos.qc1.1)<-c("CHROM", "POS", "s.loc", "s.pos")
+
+loci.QC1<-unite(stacks.pos.qc1.1, "chrom_pos", 1:2, sep = "_", remove = FALSE)
+
+## want to know which loci in loci.all are NOT in loci.QC1
+
+Dif = setdiff(loci.all$chrom_pos,loci.QC1$chrom_pos)
+
+# and get their stacks locus number
+Dif.stacks<-loci.all[which(loci.all$chrom_pos %in% Dif),]
+Dif.stacks.loci<-unique(sort(Dif.stacks$s.loc))
+
+## compare that with the initial good list
+loci.QC1.stacks.loci<-unique(sort(loci.QC1$s.loc))
+
+loci.QC2<-loci.QC1[-which(Dif.stacks.loci %in% loci.QC1.stacks.loci),]
+
+length(unique(loci.QC2$s.loc))
+whitelist<-as.data.frame(unique(loci.QC2$s.loc))
+
+#generate white list
+write_delim(unique(whitelist), "TruesGlobalQC.wl", col_names = FALSE)
+
+##double check missingness before progressing - remove samples with >25% missingness
+system("vcftools --vcf out.5.recode.vcf --out out.6 --missing-indv")
+
+out_6_imiss <- read_tsv("out.6.imiss")
 
 ##Step 7
 ## re-look at sample-missingness with this whitelist
@@ -152,5 +202,5 @@ pdf("missingness_per_sample.step7.pdf")
 b
 dev.off()
 
-
+## Use this output to select samples for the next round of analysis - calling genotypes for phylogeny construction
 
