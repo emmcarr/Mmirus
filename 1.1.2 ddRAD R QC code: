@@ -202,5 +202,112 @@ pdf("missingness_per_sample.step7.pdf")
 b
 dev.off()
 
-## Use this output to select samples for the next round of analysis - calling genotypes for phylogeny construction
+#####################################################################################
+## then chose samples to run a filtered dataset with:
+## 15 zcav: 5 each from Med, Indo-Pac and Atlantic
+## 10 mbid
+## 10 mden: 5 from Indo-Pac and 5 from Atlantic
+## ran these samples, chosen for low missingness proportion, with the whitelist of loci
+## then chose the write-one snp per locus option
+#####################################################################################
+## nesi pathway /nesi/nobackup/uoa02626/bw_ddrad/mbid_gen/pops_ssnp
 
+## get basic stats
+system("vcftools --vcf populations.snps.vcf --out out.1 --missing-indv")
+
+out_i_imiss <- read_tsv("out.i.imiss")
+
+## 28738 sites/loci
+
+## but still some high coverage loci, so removed this and re-wrote the whitelist
+system("vcftools --vcf populations.snps.vcf --site-depth --out out.2")
+
+site_depth_2 <- read_tsv("out.2.ldepth") %>%
+  mutate(MEAN_DEPTH = SUM_DEPTH / 46)
+
+mean_site_depth_2 <- mean(site_depth_2$MEAN_DEPTH)
+to_keep_2 <- filter(site_depth_2, MEAN_DEPTH < 3 * mean_site_depth_2)
+mean_site_depth_2_filt <- mean(to_keep_2$MEAN_DEPTH)
+
+## filtered loci
+> mean(to_keep_2$MEAN_DEPTH)
+[1] 67.90641
+> sd(to_keep_2$MEAN_DEPTH)
+[1] 48.8953
+> range(to_keep_2$MEAN_DEPTH)
+[1]   1.804348 207.434783
+
+# Make a list of the sites to filter
+to_filter_2 <- filter(site_depth_2, MEAN_DEPTH >= 3 * mean_site_depth_2) %>%
+  select(CHROM, POS)
+
+# Write the sites to remove to a file
+write_delim(to_filter_2, "remove.2.sites", col_names = FALSE)
+
+# Remove the sites with VCFtools
+system("vcftools --vcf populations.snps.vcf --out out.3 --exclude-positions remove.2.sites --recode --recode-INFO-all")
+
+## out.3 is what we want to work with next: identify discordant markers
+
+## estimate error and remove duplicate
+
+## calculating error rates
+dups_a<-c("BWLib_L1_Mmir_1_alnS")
+
+## and their duplicates
+dups_b<-c("BWLib_L1_Mmir_6_alnS")
+
+# write the names to file
+write_delim(as.data.frame(dups_a), "dups_a.txt", col_names = FALSE)
+write_delim(as.data.frame(dups_b), "dups_b.txt", col_names = FALSE)
+
+#filter to create one vcf file of samples and one of duplicates
+system("vcftools --vcf out.3.recode.vcf --out dups.a --keep dups_a.txt --recode --recode-INFO-all")
+system("vcftools --vcf out.3.recode.vcf --out dups.b --keep dups_b.txt --recode --recode-INFO-all")
+
+## inspect replicates for missing data
+system("vcftools --vcf dups.a.recode.vcf --out dups.a.missing --missing-indv")
+system("vcftools --vcf dups.b.recode.vcf --out dups.b.missing --missing-indv")
+dupsa.miss <- read_tsv("dups.a.missing.imiss")
+dupsb.miss <- read_tsv("dups.b.missing.imiss")
+
+## keep dupsa; BWLib_L1_Mmir_1_alnS and remove BWLib_L1_Mmir_6_alnS
+## figure out
+
+# need to rename samples so that they are the same
+system("nano dups.b.recode.vcf")
+
+# then compare the two files to identify discordant loci
+system("vcftools --vcf dups.a.recode.vcf --diff dups.b.recode.vcf --diff-site-discordance --out out.rep")
+## outputs on a per sample basis
+system("vcftools --vcf dups.a.recode.vcf --diff dups.b.recode.vcf --diff-indv-discordance --out out.ind.rep")
+dups.indv <- read_tsv("out.ind.rep.diff.indv")
+
+
+# this can be used to identify loci to exclude and estimate error rate
+
+discord <- read_tsv("out.rep.diff.sites")
+## per allele error rate
+sum(discord$N_DISCORD)
+sum(discord$N_COMMON_CALLED)
+sum(discord$N_DISCORD)/sum(discord$N_COMMON_CALLED) ##  0.002224289 error rate
+
+disc_sites <- filter(discord, DISCORDANCE > 0) %>%
+  select(CHROM, POS)
+
+# Write the sites to remove to a file
+write_delim(disc_sites, "remove.3.sites", col_names = FALSE)
+
+# Remove discordant sites
+system("vcftools --vcf out.3.recode.vcf --out out.4 --exclude-positions remove.3.sites --recode --recode-INFO-all")
+# 28623 sites remaining
+
+#### extract whitelist from remaining loci
+system("egrep -v '^#' out.4.recode.vcf > bald.out.4.recode.vcf")
+system("cut bald.out.4.recode.vcf -f 3 > 4.loci.number")
+system("cut 4.loci.number -d ':' -f 1 | sort -u > whitelistv2.loci")
+
+#####################################################################################
+## now we rerun populations, keeping only one sample in the replicate and using new whitelist
+## output from here went to IQtree
+#####################################################################################
