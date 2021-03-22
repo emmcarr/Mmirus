@@ -14,7 +14,7 @@
 ## 1.2 mitochondrial phylogenies
 
 ## 1.3 PSMC analyses
-
+1.2.1
 ## 2. Population genetics analysis
 ## 
 
