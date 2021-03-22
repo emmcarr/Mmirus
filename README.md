@@ -12,7 +12,7 @@
 1.1.3. SNP IQtree code: details how IQtree was run to generate SNP based phylogeny
 
 ## 1.2 mitochondrial phylogenies
-
+1.2.1 calibrations points
 ## 1.3 PSMC analyses
 1.3.1 psmc pipeline: details how psmc files were generated and visualized
 
