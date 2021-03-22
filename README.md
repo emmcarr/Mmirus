@@ -14,7 +14,10 @@
 ## 1.2 mitochondrial phylogenies
 
 ## 1.3 PSMC analyses
-1.2.1
+1.3.1 psmc pipeline: details how psmc files were generated and visualized
+
+1.3.2 hybrid psmc: details how hpsmc files were generated and visualized
+
 ## 2. Population genetics analysis
 ## 
 
