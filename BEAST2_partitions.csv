@@ -1,9 +1,0 @@
-﻿Subset , Best Model ,BEAUTi input, # sites    , Partition names                                                                                     
-1      , TRN+I      ,TN93, 2557       ," 16s_rRNA, 12s_rRNA                                                                                  "
-2      , TRN+G+X    ,TN93, 2678       ," ATP8_1stpos, ATP8_2ndpos, CYTB_1stpos, ND1_1stpos, ND4L_1stpos, ND3_1stpos, ND2_1stpos, ATP6_1stpos, ND4_1stpos, ND5_1stpos"
-3      , HKY+I+X    ,HKY, 2169       ," ND3_2ndpos, ND2_2ndpos, ND5_2ndpos, ATP6_2ndpos, ND1_2ndpos, ND4_2ndpos, ND4L_2ndpos                "
-4      , TRN+G+X    ,TN93, 3617       ," ND4L_3rdpos, ATP8_3rdpos, COX2_3rdpos, COX1_3rdpos, ATP6_3rdpos, COX3_3rdpos, ND4_3rdpos, CYTB_3rdpos, ND5_3rdpos, ND3_3rdpos, ND1_3rdpos, ND2_3rdpos"
-5      , TRNEF+I    ,TN93, 1004       ," COX3_1stpos, COX2_1stpos, COX1_1stpos                                                               "
-6      , HKY+I+X    ,HKY, 1558       ," ND6_2ndpos, COX1_2ndpos, COX2_2ndpos, COX3_2ndpos, CYTB_2ndpos                                      "
-7      , TRN+X      ,TN93, 175        , ND6_1stpos                                                                                          
-8      , HKY+X      ,HKY, 175        , ND6_3rdpos
