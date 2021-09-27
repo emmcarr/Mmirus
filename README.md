@@ -16,9 +16,9 @@
 
 1.2.2 node calibrations: details of calibrations implemented in BEAUTI when preparing the XML file for BEAST2
 
-1.2.3 partitions: details of PartitionFinder2 results and partitions imported into BEAUTI when preparing the XML file for BEAST2
+1.2.3 partitions.csv: details of PartitionFinder2 results and partitions imported into BEAUTI when preparing the XML file for BEAST2
 
-1.2.4 BEAST2 XML: details of BEAST2 input
+1.2.4 BEAST2.xml: details of BEAST2 input
 
 
 
