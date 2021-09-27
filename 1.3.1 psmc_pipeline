@@ -22,7 +22,7 @@ samtools mpileup -C50 -uf ref.fa aln.bam | bcftools view -c | vcfutils.pl vcf2fq
 
 module load htslib samtools bcftools psmc
 
-bcftools mpileup -f /groups/hologenomics/mccarthy/data/Beaked_whales/westbury/MesBid_mapped_to_RMOrca.final.scaffolds_20kbMP_over1kb_GCk51_scaffold.fasta /groups/hologenomics/mccarthy/data/Mesoplodon_morten/MTO_Mmir8_S17_L001_nomt_aligned_sorted_unique.bam | bcftools call -c | vcfutils.pl vcf2fq -d 5 -D 100 | gzip > Mmir8.diploid.fq.gz
+bcftools mpileup -f MesBid_mapped_to_RMOrca.final.scaffolds_20kbMP_over1kb_GCk51_scaffold.fasta MTO_Mmir8_S17_L001_nomt_aligned_sorted_unique.bam | bcftools call -c | vcfutils.pl vcf2fq -d 5 -D 100 | gzip > Mmir8.diploid.fq.gz
 
 #!/bin/bash
 #SBATCH --job-name=USNM594039.diploid # Job name
@@ -40,7 +40,7 @@ bcftools mpileup -f /groups/hologenomics/mccarthy/data/Beaked_whales/westbury/Me
 
 module load htslib samtools bcftools psmc
 
-bcftools mpileup -f /groups/hologenomics/mccarthy/data/Beaked_whales/westbury/MesBid_mapped_to_RMOrca.final.scaffolds_20kbMP_over1kb_GCk51_scaffold.fasta /groups/hologenomics/mccarthy/data/Mesoplodon_mirus/downsampling/USNM594039_nomt_aligned_sorted_unique_subsample.bam | bcftools call -c | vcfutils.pl vcf2fq -d 5 -D 100 | gzip > USNM594039.subsampled.diploid.fq.gz
+bcftools mpileup -f MesBid_mapped_to_RMOrca.final.scaffolds_20kbMP_over1kb_GCk51_scaffold.fasta USNM594039_nomt_aligned_sorted_unique_subsample.bam | bcftools call -c | vcfutils.pl vcf2fq -d 5 -D 100 | gzip > USNM594039.subsampled.diploid.fq.gz
 
 #For converting the diploid fq to a psmcfa file 
 #In this directory when I'm running this /groups/hologenomics/mccarthy/data/Beaked_whales/subsampled
@@ -75,9 +75,9 @@ USNM594039.diploid.psmcfa
 
 module load java bbmap
 
-filterbyname.sh in=Mmir8.diploid.psmcfa out=Mmir8.autosomes.diploid.psmcfa names=/groups/hologenomics/mccarthy/data/Beaked_whales/westbury/MesBid_XY.txt exclude
+filterbyname.sh in=Mmir8.diploid.psmcfa out=Mmir8.autosomes.diploid.psmcfa names=MesBid_XY.txt exclude
 
-filterbyname.sh in=USNM594039.diploid.psmcfa out=USNM594039.autosomes.diploid.psmcfa names=/groups/hologenomics/mccarthy/data/Beaked_whales/westbury/MesBid_XY.txt exclude
+filterbyname.sh in=USNM594039.diploid.psmcfa out=USNM594039.autosomes.diploid.psmcfa names=MesBid_XY.txt exclude
 
 
 #Running psmc 
