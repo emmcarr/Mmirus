@@ -10,28 +10,12 @@ python /groups/hologenomics/mccarthy/data/Beaked_whales/hPSMC-master/psmcfa_from
 
 
 #Run psmc with this command
-
-#!/bin/bash 
-#SBATCH -J Mmir9.USNM.psmc      ## you can give whatever name you want here to identify your job
-#SBATCH -o Mmir9.USNM.psmc.log.out ## name a file to save log of your job
-#SBATCH -e Mmir9.USNM.psmc.error       ## save error message if any
-#SBATCH --mail-user=morgan@bio.ku.dk  ## your email account to receive notification of job status
-#SBATCH --mail-type=ALL ## ALL mean you will receive everything about your job, such like start running, fail, or finish
-#SBATCH -t 72:00:00    ## give an estimation of how long is your job going to run, format HH:MM:SS
-#SBATCH -p hologenomics
-#SBATCH --ntasks=1                   # Run a single task
-#SBATCH --cpus-per-task=5            # Number of CPU cores per task
-#SBATCH --mem-per-cpu=1gb
-############################################
-module load psmc 
 psmc -N25 -t15 -r5 -p "4+25*2+4+6" -o hPSMC.Mmir8.USNM594039.min3.psmc hPSMC.Mmir8.USNM594039.min3.psmcfa
 
 #Next is to plot PSMC
 
 #Using the s 10 option 
-/Users/morganmccarthy/Software/psmc-master/utils/psmc_plot.pl -s 10 -u 2.34e-8 -g 23 -RM "M.mir USNM and M.mir 8 hpsmc" hPSMC.Mmir8.USNM594039.min3.psmc.s10.out hPSMC.Mmir8.USNM594039.min3.psmc
-
-
+psmc-master/utils/psmc_plot.pl -s 10 -u 2.34e-8 -g 23 -RM "M.mir USNM and M.mir 8 hpsmc" hPSMC.Mmir8.USNM594039.min3.psmc.s10.out hPSMC.Mmir8.USNM594039.min3.psmc
 
 module load miniconda 
 source activate hpsmc
@@ -49,18 +33,6 @@ hpsmc simulations
 ####################################
 vim run_Mmir8.USNM594039.simulations.17000.sh
 
-#!/bin/bash
-#SBATCH -J Mmir8.USNM594039.simulations.17000      ## you can give whatever name you want here to identify your job
-#SBATCH -o Mmir8.USNM594039.simulations.17000.log.out ## name a file to save log of your job
-#SBATCH -e Mmir8.USNM594039.simulations.17000.error       ## save error message if any
-#SBATCH --mail-user=morgan@bio.ku.dk  ## your email account to receive notification of job status
-#SBATCH --mail-type=ALL ## ALL mean you will receive everything about your job, such like start running, fail, or finish
-#SBATCH -t 24:00:00    ## give an estimation of how long is your job going to run, format HH:MM:SS
-#SBATCH -p hologenomics
-#SBATCH --ntasks=1                   # Run a single task
-#SBATCH --cpus-per-task=3            # Number of CPU cores per task
-#SBATCH --mem-per-cpu=1gb
-############################################
 module load miniconda
 source activate hpsmc
 module load python/v2.7.17
