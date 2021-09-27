@@ -18,19 +18,20 @@
 
 1.2.3 partitions: details of PartitionFinder2 results and partitions imported into BEAUTI when preparing the XML file for BEAST2
 
+
+
+## 2. Genomics analyses
+
 ## 1.3 Genome mapping and analyses
-1.3.1 Raw read quality control and genome mapping: steps taken to trim filter and map reads
+2.1.1 Raw read quality control and genome mapping: steps taken to trim filter and map reads
 
-1.3.2 BAM downsampling: steps taken to downsample bam files
+2.2.2 BAM downsampling: steps taken to downsample bam files
 
-1.3.3 psmc pipeline: details how psmc files were generated and visualized
+2.3.3 psmc pipeline: details how psmc files were generated and visualized
 
-1.3.4 hybrid psmc: details how hpsmc files were generated and visualized
+2.4.4 hybrid psmc: details how hpsmc files were generated and visualized
 
-1.3.5 Heterozygosity calculation: details how genome-wide global heterozygosity was calculated in ROHan
-
-## 2. Population genetics analysis
-## 
+2.5.5 Heterozygosity calculation: details how genome-wide global heterozygosity was calculated in ROHan 
 
 
 
