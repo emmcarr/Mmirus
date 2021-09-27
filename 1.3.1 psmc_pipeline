@@ -36,4 +36,41 @@ psmc -N25 -t15 -r5 -p "4+25*2+4+6" -o USNM594039.diploid_NO_XY.psmc USNM594039.a
 cat USNM594039.diploid_NO_XY.psmc Mmir8.diploid_NO_XY.psmc > M.mir.autosomes.combined.psmc
 /Users/morganmccarthy/Software/psmc-master/utils/psmc_plot.pl -u 2.34e-8 -g 25.9 -RM 'USNM594039,Mmir8' M.mir.combined.out M.mir.autosomes.combined.psmc 
 
+#Generate 100 bootstrap replicates following https://github.com/lh3/psmc
+module load psmc
+for file in *autosomes.diploid.psmcfa
+do 
+ID=`echo ${file} | cut -f1 -d "."`
+splitfa ${file} > split.${ID}.autosomes.diploid.psmcfa
+done
+
+#For M.eueu
+#bootstraps
+for file in split.Mmir8.autosomes.diploid.psmcfa
+do
+ID=`echo ${file} | cut -f2 -d "."`
+seq 100 |xargs -P 1 -i echo psmc -N25 -t15 -r5 -b -p ^4+25*2+4+6^ -o round_${ID}-{}.psmc ${file} "&" >> Mmir8.bootstrap.commands.sh
+done
+
+sed 's/\^/\"/g' Mmir8.bootstrap.commands.sh >> Mmir8.bootstrap.commands.edited.sh
+sbatch Mmir8.bootstrap.commands.edited.sh
+
+#For M.mirus 
+for file in split.USNM594039.autosomes.diploid.psmcfa
+do
+ID=`echo ${file} | cut -f2 -d "."`
+seq 100 |xargs -P 1 -i echo psmc -N25 -t15 -r5 -b -p ^4+25*2+4+6^ -o round_${ID}-{}.psmc ${file} "&" >> USNM594039.bootstrap.commands.sh
+done
+
+sed 's/\^/\"/g' USNM594039.bootstrap.commands.sh >> USNM594039.bootstrap.commands.edited.sh
+sbatch  USNM594039.bootstrap.commands.edited.sh
+
+##This plots just USNM594039
+cat USNM594039.diploid_NO_XY.psmc round_USNM594039*.psmc > combined.bootsraps.USNM594039.psmc 
+/Users/morganmccarthy/Software/psmc-master/utils/psmc_plot.pl -u 2.34e-8 -g 25.9 combined.bootsraps.USNM594039.psmc.out combined.bootsraps.USNM594039.psmc
+
+#This plots just Mmir8
+cat Mmir8.diploid_NO_XY.psmc round_Mmir8*.psmc > combined.bootsraps.Mmir8.psmc
+/Users/morganmccarthy/Software/psmc-master/utils/psmc_plot.pl -u 2.34e-8 -g 25.9 combined.bootsraps.Mmir.psmc.out combined.bootsraps.Mmir8.psmc
+
 
