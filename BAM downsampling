@@ -1,0 +1,38 @@
+################################################################
+Downsampling bam files
+################################################################
+
+Use samtools flag stat or samtools idxstats to get the total number of reads, and then calculate the proportion
+ 
+#Index the BAM files 
+module load htslib samtools
+samtools index USNM594039_nomt_aligned_sorted_unique.bam
+samtools index MTO_Mmir8_S17_L001_nomt_aligned_sorted_unique.bam
+
+#Calculate flagstat
+samtools flagstat --threads 10 USNM594039_nomt_aligned_sorted_unique.bam > flagstat_USNM594039_nomt_aligned_sorted_unique_results.txt 
+samtools flagstat --threads 10 MTO_Mmir8_S17_L001_nomt_aligned_sorted_unique.bam > flagstat_USNM594039_nomt_aligned_sorted_unique_results.txt
+
+#Calculate idxstats
+samtools idxstats --threads 10 USNM594039_nomt_aligned_sorted_unique.bam > idxstats_USNM594039_nomt_aligned_sorted_unique_results.txt 
+samtools idxstats --threads 10 MTO_Mmir8_S17_L001_nomt_aligned_sorted_unique.bam > idxstats_esoplodon_morten/MTO_Mmir8_S17_L001_nomt_aligned_sorted_unique_results.txt
+ 
+838272416 - USNM594039 (50-51x)
+118094729 - Mmir8 (7x)
+(118094729/838272416)
+Take 14% of USNM594039 mapping reads
+
+#Randomly select 14% of mapped reads
+module load htslib samtools 
+samtools view -s 3.14 --threads 10 -b /groups/hologenomics/mccarthy/data/Mesoplodon_mirus/USNM594039_nomt_aligned_sorted_unique.bam -o /groups/hologenomics/mccarthy/data/Mesoplodon_mirus/downsampling/USNM594039_nomt_aligned_sorted_unique_subsample.bam
+
+#Confirm the depth of coverage 
+#Note that duplicates were previously removed before merging the bam files 
+module load htslib samtools
+for BAM in MTO_Mmir8_S17_L001_nomt_aligned_sorted_unique.bam USNM594039_nomt_aligned_sorted_unique_subsample.bam
+do
+echo ${BAM}
+  # calculate mean and standard deviation of bam coverage
+  STATS=$(samtools depth -a $BAM | awk '{sum+=$3; sumsq+=$3*$3} END { print sum/NR,"\t", sqrt(sumsq/NR - (sum/NR)**2)}')
+  echo -e "${BAM}\t${STATS}"
+done > bam_coverage.txt
