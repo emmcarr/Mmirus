@@ -1,1 +1,123 @@
+############################################
+PSMC
+############################################
+
+
+samtools mpileup -C50 -uf ref.fa aln.bam | bcftools view -c | vcfutils.pl vcf2fq -d 10 -D 100 | gzip > diploid.fq.gz
+/groups/hologenomics/mccarthy/data/Mesoplodon_morten/MTO_Mmir8_S17_L001_nomt_aligned_sorted_unique.bam /groups/hologenomics/mccarthy/data/Mesoplodon_mirus/downsampling/USNM594039_nomt_aligned_sorted_unique_subsample.bam
+
+#!/bin/bash
+#SBATCH --job-name=mmir8.diploid # Job name
+#SBATCH -e mmir8.diploid.error
+#SBATCH --mail-type=ALL # Mail events (BEGIN, END, FAIL, ALL)
+#SBATCH --mail-user=morgan@bio.ku.dk # Where to send mail
+#SBATCH --ntasks=1 # Run a single task
+#SBATCH --cpus-per-task=10 # Number of CPU cores per task
+#SBATCH --mem-per-cpu=100mb
+#SBATCH --nodes=1
+#SBATCH --time=100:00:00 # Time limit hrs:min:sec
+#SBATCH --output=mmir8.diploid.log # Standard output/error
+#SBATCH -p hologenomics
+############################################
+
+module load htslib samtools bcftools psmc
+
+bcftools mpileup -f /groups/hologenomics/mccarthy/data/Beaked_whales/westbury/MesBid_mapped_to_RMOrca.final.scaffolds_20kbMP_over1kb_GCk51_scaffold.fasta /groups/hologenomics/mccarthy/data/Mesoplodon_morten/MTO_Mmir8_S17_L001_nomt_aligned_sorted_unique.bam | bcftools call -c | vcfutils.pl vcf2fq -d 5 -D 100 | gzip > Mmir8.diploid.fq.gz
+
+#!/bin/bash
+#SBATCH --job-name=USNM594039.diploid # Job name
+#SBATCH -e USNM594039.diploid.error
+#SBATCH --mail-type=ALL # Mail events (BEGIN, END, FAIL, ALL)
+#SBATCH --mail-user=morgan@bio.ku.dk # Where to send mail
+#SBATCH --ntasks=1 # Run a single task
+#SBATCH --cpus-per-task=10 # Number of CPU cores per task
+#SBATCH --mem-per-cpu=100mb
+#SBATCH --nodes=1
+#SBATCH --time=100:00:00 # Time limit hrs:min:sec
+#SBATCH --output=USNM594039.diploid.log # Standard output/error
+#SBATCH -p hologenomics
+############################################
+
+module load htslib samtools bcftools psmc
+
+bcftools mpileup -f /groups/hologenomics/mccarthy/data/Beaked_whales/westbury/MesBid_mapped_to_RMOrca.final.scaffolds_20kbMP_over1kb_GCk51_scaffold.fasta /groups/hologenomics/mccarthy/data/Mesoplodon_mirus/downsampling/USNM594039_nomt_aligned_sorted_unique_subsample.bam | bcftools call -c | vcfutils.pl vcf2fq -d 5 -D 100 | gzip > USNM594039.subsampled.diploid.fq.gz
+
+#For converting the diploid fq to a psmcfa file 
+#In this directory when I'm running this /groups/hologenomics/mccarthy/data/Beaked_whales/subsampled
+vim diploid.2.psmcfa.sh
+#!/bin/bash
+#SBATCH -J diploid.2.psmcfa      ## you can give whatever name you want here to identify your job
+#SBATCH -o diploid.2.psmcfa.log.out ## name a file to save log of your job
+#SBATCH -e diploid.2.psmcfa.error       ## save error message if any
+#SBATCH --mail-user=morgan@bio.ku.dk  ## your email account to receive notification of job status
+#SBATCH --mail-type=ALL ## ALL mean you will receive everything about your job, such like start running, fail, or finish
+#SBATCH -t 12:00:00    ## give an estimation of how long is your job going to run, format HH:MM:SS
+#SBATCH -p hologenomics
+#SBATCH --ntasks=1                   # Run a single task
+#SBATCH --cpus-per-task=10            # Number of CPU cores per task
+#SBATCH --mem-per-cpu=100mb
+############################################
+module load psmc
+
+for file in *.diploid.fq.gz
+
+do 
+ID=`echo ${file}|cut -f1,2 -d "."`
+fq2psmcfa -q30 ${file} > ${ID}.diploid.psmcfa
+done
+
+######################
+Remove sex scaffolds
+######################
+#Starting files
+Mmir8.diploid.psmcfa
+USNM594039.diploid.psmcfa
+
+module load java bbmap
+
+filterbyname.sh in=Mmir8.diploid.psmcfa out=Mmir8.autosomes.diploid.psmcfa names=/groups/hologenomics/mccarthy/data/Beaked_whales/westbury/MesBid_XY.txt exclude
+
+filterbyname.sh in=USNM594039.diploid.psmcfa out=USNM594039.autosomes.diploid.psmcfa names=/groups/hologenomics/mccarthy/data/Beaked_whales/westbury/MesBid_XY.txt exclude
+
+
+#Running psmc 
+vim Mmir8.diploid_NO_XY.psmc.sh 
+#!/bin/bash 
+#SBATCH -J Mmir8.diploid_NO_XY.psmc      ## you can give whatever name you want here to identify your job
+#SBATCH -o Mmir8.diploid_NO_XY.psmc.log.out ## name a file to save log of your job
+#SBATCH -e Mmir8.diploid_NO_XY.psmc.error       ## save error message if any
+#SBATCH --mail-user=morgan@bio.ku.dk  ## your email account to receive notification of job status
+#SBATCH --mail-type=ALL ## ALL mean you will receive everything about your job, such like start running, fail, or finish
+#SBATCH -t 72:00:00    ## give an estimation of how long is your job going to run, format HH:MM:SS
+#SBATCH -p hologenomics
+#SBATCH --ntasks=1                   # Run a single task
+#SBATCH --cpus-per-task=10            # Number of CPU cores per task
+#SBATCH --mem-per-cpu=100mb
+############################################
+module load psmc
+psmc -N25 -t15 -r5 -p "4+25*2+4+6" -o Mmir8.diploid_NO_XY.psmc Mmir8.autosomes.diploid.psmcfa 
+
+psmc -N25 -t15 -r5 -p "4+25*2+4+6" -o Mmir8.with_XY.psmc Mmir8.diploid.psmcfa
+
+vim USNM594039.diploid_NO_XY.psmc.sh 
+#!/bin/bash 
+#SBATCH -J USNM594039.diploid_NO_XY.psmc      ## you can give whatever name you want here to identify your job
+#SBATCH -o USNM594039.diploid_NO_XY.psmc.log.out ## name a file to save log of your job
+#SBATCH -e USNM594039.diploid_NO_XY.psmc.error       ## save error message if any
+#SBATCH --mail-user=morgan@bio.ku.dk  ## your email account to receive notification of job status
+#SBATCH --mail-type=ALL ## ALL mean you will receive everything about your job, such like start running, fail, or finish
+#SBATCH -t 72:00:00    ## give an estimation of how long is your job going to run, format HH:MM:SS
+#SBATCH -p hologenomics
+#SBATCH --ntasks=1                   # Run a single task
+#SBATCH --cpus-per-task=10            # Number of CPU cores per task
+#SBATCH --mem-per-cpu=100mb
+############################################
+module load psmc
+psmc -N25 -t15 -r5 -p "4+25*2+4+6" -o USNM594039.diploid_NO_XY.psmc USNM594039.autosomes.diploid.psmcfa
+
+psmc -N25 -t15 -r5 -p "4+25*2+4+6" -o USNM594039.with_XY.psmc USNM594039.diploid.psmcfa
+
+cat USNM594039.diploid_NO_XY.psmc Mmir8.diploid_NO_XY.psmc > M.mir.autosomes.combined.psmc
+/Users/morganmccarthy/Software/psmc-master/utils/psmc_plot.pl -u 2.34e-8 -g 25.9 -RM 'USNM594039,Mmir8' M.mir.combined.out M.mir.autosomes.combined.psmc 
+
 
