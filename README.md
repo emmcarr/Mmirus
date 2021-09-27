@@ -22,7 +22,7 @@
 
 ## 2. Genomics analyses
 
-## 1.3 Genome mapping and analyses
+## 2.1 Genome mapping and analyses
 2.1.1 Raw read quality control and genome mapping: steps taken to trim filter and map reads
 
 2.2.2 BAM downsampling: steps taken to downsample bam files
