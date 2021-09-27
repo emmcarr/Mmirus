@@ -20,6 +20,10 @@
 
 1.2.4 BEAST2.xml: details of BEAST2 input
 
+1.2.5 Beast2.log: combined log output of three seperate BEAST2 runs 
+
+1.2.6 Beast2.trees: combined tree file output from three seperate BEAST2 runs
+
 
 
 ## 2. Genomics analyses
