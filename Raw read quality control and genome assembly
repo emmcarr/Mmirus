@@ -1,1 +1,97 @@
+####################################
+Pre-trimming quality control 
+####################################
+
+for file in *.fastq; do fastqc -t 10 ${file}; done 
+
+####################################
+Trimming reads 
+####################################
+
+for file in *.R1.fastq.gz
+do
+#sample=`echo $file | cut -f8 -d "/"` 
+#echo ${file}
+ID=`echo ${file} | cut -f1 -d "."`
+#echo ${sample}
+echo ${ID}
+bbduk.sh in1=${ID}.R1.fastq.gz in2=${ID}.R2.fastq.gz out1=${ID}.R1.BBDUK.fastq.gz out2=${ID}.R2.BBDUK.fastq.gz ref=adapters ktrim=r k=23 mink=8 hdist=1 tbo qtrim=rl trimq=15 maq=20 minlen=40
+done 
+
+####################################
+Post-trimming quality control 
+####################################
+
+for file in *BBDUK.fastq.gz; do fastqc -t 10 ${file}; done 
+
+####################################
+Preparing for mapping  
+####################################
+#Downloaded the mtDNA reference genome from NCBI https://www.ncbi.nlm.nih.gov/genome?term=mesoplodon%20mirus[orgn]%20NOT%20genome[PROP]%20AND%20non_genome[filter]
+samtools faidx NC_042217.1_with_50bp_pad.fasta
+bwa index NC_042217.1_with_50bp_pad.fasta
+samtools faidx MesBid_mapped_to_RMOrca.final.scaffolds_20kbMP_over1kb_GCk51_scaffold.fasta
+bwa index MesBid_mapped_to_RMOrca.final.scaffolds_20kbMP_over1kb_GCk51_scaffold.fasta
+
+####################################
+Genome mapping  
+####################################
+#These commands were for sample USNM594039 and were repeated for the sample NOAA_34216
+
+#Combine trimmed reads from different lanes into one fastq file
+cat *.R1.BBDUK.fastq.gz > USNM594039_reads1.fq.gz
+cat *.R2.BBDUK.fastq.gz > USNM594039_reads2.fq.g
+
+#align to mitogenome after manually adding a 50 bp pad to each end of the reference mitogenome
+bwa mem -t 32 NC_042217.1_with_50bp_pad.fasta USNM594039_reads1.fq.gz USNM594039_reads2.fq.gz > USNM594039_mapped_to_mt.sam
+
+#convert the mapped sam file to a sorted bam file
+samtools view -@ 32 -b -h USNM594039_mapped_to_mt.sam | samtools sort -@ 32 -o USNM594039_mapped_to_mt_sorted.bam
+
+#copy unmapped reads to new BAM file to subsequently map to the nuclear genome
+samtools view -@ 32 -f12 -h USNM594039_mapped_to_mt_sorted.bam > USNM594039_unmapped.bam
+
+#convert unmapped reads to fastq
+samtools bam2fq USNM594039_unmapped.bam > USNM594039_nomt_reads.fq
+
+#separate the forward and reverse reads derived from the unmapped bam file
+cat USNM594039_nomt_reads.fq| grep '^@.*/1$' -A 3 --no-group-separator > USNM594039_nomt_reads1.fastq 
+cat USNM594039_nomt_reads.fq | grep '^@.*/2$' -A 3 --no-group-separator > USNM594039_nomt_reads2.fastq
+
+#align to full genome
+bwa mem -t 32 -k 19 MesBid_mapped_to_RMOrca.final.scaffolds_20kbMP_over1kb_GCk51_scaffold.fasta bwa mem USNM594039_nomt_reads1.fastq USNM594039_nomt_reads2.fastq > USNM594039_nomt_aligned.sam
+
+#convert to bam file
+samtools view -@ 32 -T MesBid_mapped_to_RMOrca.final.scaffolds_20kbMP_over1kb_GCk51_scaffold.fasta -b USNM594039_nomt_aligned.sam | samtools sort -@ 32 -o USNM594039_nomt_aligned_sorted.bam
+
+#remove duplicates
+samtools rmdup -S USNM594039_nomt_aligned_sorted.bam USNM594039_nomt_aligned_sorted_unique.bam
+
+####################################
+Calculating Depth of Coverage   
+####################################
+
+for file in USNM594039_nomt_aligned_sorted_unique.bam
+do
+samtools index ${file}
+echo ${file} > ${file}_bamlist.txt
+# generate distributions of depth and quality scores:
+angsd -b ${file}_bamlist.txt -nThreads 5 -doQsDist 1 -doCounts 1 -maxDepth 200 -doDepth 1 -out bam.qc 
+# data.bamlist is just a text file with the name of the bam file (since there's only 1)
+# -doQsDistv 1 counts the number of bases for each quality score
+# -maxDepth 100 sets the maximum depth at 100
+# -out indicates the output file, followed by the output file name.
+done
+
+####################################
+Generating fasta files  
+####################################
+
+angsd -i USNM594039_nomt_aligned_sorted_unique.bam -nThreads 5 -doFasta 3 -minQ 25 -minmapq 25 -uniqueonly 1 -remove_bads 1 -setMinDepthInd 3 -doCounts 1 -out USNM594039_nomt_aligned_sorted_unique
+
+
+
+
+
+
 
