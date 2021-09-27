@@ -29,7 +29,7 @@
 
 2.3.3 psmc pipeline: details how psmc files were generated and visualized
 
-2.4.4 hybrid psmc: details how hpsmc files were generated and visualized
+2.4.4 hybrid psmc (hpsmc): details how hpsmc files were generated and visualized
 
 2.5.5 Heterozygosity calculation: details how genome-wide global heterozygosity was calculated in ROHan 
 
