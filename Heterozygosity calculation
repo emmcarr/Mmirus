@@ -5,7 +5,7 @@ module load htslib
 module load samtools
 module load ROHan
 
-#For M.mirus
+#For downsampled M.mirus
 samtools index USNM594039_nomt_aligned_sorted_unique_subsample.bam
 rohan -o USNM594039.rohan -t 5 MesBid_mapped_to_RMOrca.final.scaffolds_20kbMP_over1kb_GCk51_scaffold.fasta USNM594039_nomt_aligned_sorted_unique_subsample.bam
 
