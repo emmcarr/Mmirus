@@ -36,3 +36,16 @@ echo ${BAM}
   STATS=$(samtools depth -a $BAM | awk '{sum+=$3; sumsq+=$3*$3} END { print sum/NR,"\t", sqrt(sumsq/NR - (sum/NR)**2)}')
   echo -e "${BAM}\t${STATS}"
 done > bam_coverage.txt
+
+
+#Further downsampling to observe the impact of depth on psmc results
+module load htslib samtools 
+samtools view -s 3.80 --threads 10 -b USNM594039_nomt_aligned_sorted_unique.bam -o USNM594039_nomt_aligned_sorted_unique_subsample_40x.bam
+wait
+samtools view -s 3.60 --threads 10 -b USNM594039_nomt_aligned_sorted_unique.bam -o USNM594039_nomt_aligned_sorted_unique_subsample_30x.bam
+wait 
+samtools view -s 3.40 --threads 10 -b USNM594039_nomt_aligned_sorted_unique.bam -o USNM594039_nomt_aligned_sorted_unique_subsample_20x.bam
+wait
+samtools view -s 3.20 --threads 10 -b USNM594039_nomt_aligned_sorted_unique.bam -o USNM594039_nomt_aligned_sorted_unique_subsample_10x.bam
+wait
+samtools view -s 3.10 --threads 10 -b USNM594039_nomt_aligned_sorted_unique.bam -o USNM594039_nomt_aligned_sorted_unique_subsample_5x.bam
