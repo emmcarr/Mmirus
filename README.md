@@ -21,13 +21,13 @@
 ## 1.3 Genome mapping and analyses
 1.3.1 Raw read quality control and genome mapping: steps taken to trim filter and map reads
 
-1.3.2 
+1.3.2 BAM downsampling: steps taken to downsample bam files
 
+1.3.3 psmc pipeline: details how psmc files were generated and visualized
 
-## 1.3 PSMC analyses
-1.3.1 psmc pipeline: details how psmc files were generated and visualized
+1.3.4 hybrid psmc: details how hpsmc files were generated and visualized
 
-1.3.2 hybrid psmc: details how hpsmc files were generated and visualized
+1.3.5 Heterozygosity calculation: details how genome-wide global heterozygosity was calculated in ROHan
 
 ## 2. Population genetics analysis
 ## 
