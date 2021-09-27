@@ -18,6 +18,8 @@
 
 1.2.3 partitions: details of PartitionFinder2 results and partitions imported into BEAUTI when preparing the XML file for BEAST2
 
+1.2.4 BEAST2 XML: details of BEAST2 input
+
 
 
 ## 2. Genomics analyses
