@@ -18,6 +18,10 @@
 
 1.2.3 partitions: details of PartitionFinder2 results and partitions imported into BEAUTI when preparing the XML file for BEAST2
 
+## 1.3 Raw read quality control and genome mapping
+1.3.1 psmc pipeline: details how psmc files were generated and visualized
+
+
 ## 1.3 PSMC analyses
 1.3.1 psmc pipeline: details how psmc files were generated and visualized
 
