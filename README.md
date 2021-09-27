@@ -33,5 +33,7 @@
 
 2.1.5 Heterozygosity calculation: details how genome-wide global heterozygosity was calculated in ROHan 
 
+2.1.6 IBS analysis: details how the haploid identity-by-state anaylsis was conducted
+
 
 
