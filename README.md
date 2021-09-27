@@ -11,7 +11,7 @@
 
 1.1.3. SNP IQtree code: details how IQtree was run to generate SNP based phylogeny
 
-## 1.2 mitochondrial phylogenies
+## 1.2 mitochondrial phylogeny
 1.2.1 mitogenome pipeline: details how the phylogenetic tree was generated with BEAST2.
 
 1.2.2 node calibrations: details of calibrations implemented in BEAUTI when preparing the XML file for BEAST2
