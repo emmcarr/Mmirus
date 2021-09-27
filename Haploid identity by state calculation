@@ -1,0 +1,13 @@
+##############################################
+Getting the Identity by state
+##############################################
+
+#Created an input file called bam.USNM594039.Mmir8.filelist, including the names of bam files to be included in the IBS analysis
+#USNM594039_nomt_aligned_sorted_unique_subsample.bam
+#MTO_Mmir8_S17_L001_nomt_aligned_sorted_unique.bam 
+
+module load htslib angsd
+angsd -bam bam.USNM594039.Mmir8.filelist -out USNM594039.Mmir8 -doCounts 1 -P 5 -makeMatrix 1  -doIBS 2 -minInd 2 -minMapQ 30 -minQ 30 -uniqueOnly 1 -remove_bads 1 -setMinDepthInd 5
+
+
+
