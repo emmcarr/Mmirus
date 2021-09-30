@@ -126,3 +126,7 @@ mean(natd$TajimaD) ##  -0.164137
 std.error(natd$TajimaD) # 0.01184552
 t.test(natd$TajimaD)
 wilcox.test(natd$TajimaD)
+
+## IQtree command
+
+bin/iqtree2 Mar21_populations.var.phylip.varsites.phy -m GTR+ASC -st DNA -b 1000 -redo
