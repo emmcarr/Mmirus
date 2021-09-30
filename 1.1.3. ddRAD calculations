@@ -1,0 +1,128 @@
+## code for analysis of ddRAD data
+
+library(tidyverse)
+library(stringr)
+library(reshape2)
+library(scales)
+library(dplyr)
+library(ggplot2)
+library(adegenet)
+library(PopGenReport)
+library(vcfR)
+library(strataG)
+library(dartR)
+library(ape)
+library(diveRsity)
+library(StAMPP)
+library(hierfstat)
+library(poppr)
+library(rcompanion)
+library(LEA)
+
+truesbw.vcf<-read.vcfR(("trues_pop/out.2.recode.vcf"), verbose = TRUE)
+
+## convert to genlight
+truesbw.gl<-vcfR2genlight(truesbw.vcf)
+truesbw.gi<-gl2gi(truesbw.gl)
+truesbw.gt<-genind2gtypes(truesbw.gi)
+
+new.strata<-c("North", "South", "South", "South", "North","South", "South", "North", "North", "North")
+names(new.strata) <- getIndNames(truesbw.gt)
+setStrata(truesbw.gt) <- new.strata
+
+truesbw.gi<-gtypes2genind(truesbw.gt)
+trues.hs<-genind2hierfstat(truesbw.gi)
+truesbw.gl<-gi2gl(truesbw.gi)
+
+
+## fixed differences calculation in dartR
+fd <- gl.collapse.recursive(truesbw.gl, tloc=0, test = TRUE)
+#1909 or 12% fixed differences, p<0.001
+
+## calculate dA and FST
+fst.trues.pval <- popStructTest(truesbw.gt, type = "both", stats = "fst", nrep = 1000) # Fst 0.5938799 0.007992008
+trues.fst<-genet.dist(trues.hs, diploid = TRUE, method="Fst") ## 0.6361622
+trues.da<-genet.dist(trues.hs, diploid = TRUE, method="Da") # 0.2680214
+
+## calculate observed heterozygosity Ho, observed gene diversity Hs
+trues.hfstat.basicstats<-basic.stats(trues.hs, diploid=TRUE)
+
+trues.ho<-trues.hfstat.basicstats$Ho
+trues.ho.melt<-melt(trues.ho)[,2:3]
+colnames(trues.ho.melt)<-c("pop", "ho")
+trues.ho.melt.CI=groupwiseMean(ho~pop, data=trues.ho.melt, conf=0.95, R=1000, percentile=TRUE, bca=FALSE, digits=4)
+
+trues.hs<-trues.hfstat.basicstats$Hs
+trues.hs.melt<-melt(trues.hs)[,2:3]
+colnames(trues.hs.melt)<-c("pop", "hs")
+trues.hs.melt.CI=groupwiseMean(hs~pop, data=trues.hs.melt, conf=0.95, R=1000, percentile=TRUE, bca=FALSE, digits=4)
+
+#pop     n   Mean Conf.level Trad.lower Trad.upper Percentile.lower Percentile.upper
+#Ho
+#1 North 15671 0.1341       0.95     0.1309     0.1372           0.1309           0.1376
+#2 South 15671 0.1598       0.95     0.1564     0.1632           0.1564           0.1635
+#Hs
+#1 North 15671 0.1439       0.95     0.1410     0.1469           0.1411           0.1469
+#2 #South 15671 0.1626       0.95     0.1595     0.1656           0.1596           0.1656
+
+ks.test(trues.ho[,1], trues.ho[,2])
+#D = 0.052709, p-value < 2.2e-16
+
+t.test(trues.ho[,1], trues.ho[,2])
+#t = -10.857, df = 31120, p-value < 2.2e-16
+
+## calculate heterozygosity
+gl.report.heterozygosity(truesbw.gl)
+#names        hs freq
+#1 North 0.1340821    5
+#2 South 0.1598111    5
+
+## genetic clustering code using snmf from lea
+## creating input file for snmf
+vcf2geno(input.file = "trues_pop/out.2.recode.vcf", output.file = "truesbw.geno", force = TRUE)
+
+obj.snmf = snmf("truesbw.geno", K = 1:4, project = "new", repetitions = 10, tolerance = 0.00001, entropy=TRUE, ploidy = 2)
+plot(obj.snmf, cex = 1.2, col = "lightblue", pch = 19)
+ce <- cross.entropy(obj.snmf, K = 2)
+best <- which.min(ce)
+
+## creating plot
+qmatrix = Q(obj.snmf, K = 2, run = best)
+Pop<-c("North", "South", "South", 
+       "North", "South", "South", 
+       "North", "North", "South", "North")
+Samp<-c("mmir8", "mmir7", "mmir3", "mmir9", "mmir2", "mmir6",
+        "mmir10", "mmir5", "mmir4", "mmir1")
+pops<-c("North", "South")
+qmatrix.global<-as.data.frame(cbind(pop, Samp, qmatrix[,1:2]))
+colnames(qmatrix.global)<-c("Pop", "ID", "A1", "A2")
+
+write.csv(qmatrix.global, "TruesClusteringResults.csv")
+
+## revision needed calculations to confirm Tajima's D statistics
+
+library(tidyverse)
+library(stringr)
+library(reshape2)
+library(scales)
+library(dplyr)
+library(plotrix)
+
+setwd("nesi_folder")
+
+shtd<-read_tsv("SHtajimasd.Tajima.D")
+shtd<-na.omit(shtd)
+mean(shtd$TajimaD) ## -0.111707
+std.error(shtd$TajimaD) # 0.01138113
+#testing if different from zero
+t.test(shtd$TajimaD)
+wilcox.test(shtd$TajimaD)
+
+
+system("vcftools --vcf NAt.recode.vcf --out NAtajimasd --TajimaD 10000")
+natd<-read_tsv("NAtajimasd.Tajima.D")
+natd<-na.omit(natd)
+mean(natd$TajimaD) ##  -0.164137
+std.error(natd$TajimaD) # 0.01184552
+t.test(natd$TajimaD)
+wilcox.test(natd$TajimaD)
