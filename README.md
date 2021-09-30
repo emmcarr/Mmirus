@@ -4,12 +4,12 @@
 
 ## 1. Phylogenetics
 
-## 1.1 ddRAD phylogeny
+## 1.1 ddRAD phylogeny and population genomic analyses
 1.1.1 stacks pipeline: details how multi-species data were analysed using stacks v2.41
 
 1.1.2 ddRAD R QC code: details how R code was used to QC SNP data from stacks pipeline, select loci and samples, and generate dataset for IQtree
 
-1.1.3. SNP IQtree code: details how IQtree was run to generate SNP based phylogeny
+1.1.3 ddRAD analysis code: calculating heterozygosity, FST, dA, Tajima's D, doing genetic clustering with sNMF and IQtree command
 
 ## 1.2 mitochondrial phylogeny
 1.2.1 mitogenome pipeline: details how the phylogenetic tree was generated with BEAST2.
@@ -23,7 +23,6 @@
 1.2.5 Beast2.log.zip: combined log output of three seperate BEAST2 runs 
 
 1.2.6 Beast2.trees.zip: combined tree file output from three seperate BEAST2 runs
-
 
 
 ## 2. Genomics analyses
@@ -41,5 +40,6 @@
 
 2.1.6 IBS analysis: details how the haploid identity-by-state anaylsis was conducted
 
-
+## 3. Diversity comparisons
+Code used to calculate and compare distributions of heterozygosity for genome dataset and comparing the haplotype diversity between hemispheres
 
