@@ -1,0 +1,38 @@
+## We compared diversity statistics for the two species
+
+## calculating mean and CI for heterozygosity per species using t.test single sample call in R base package
+
+na.het<-read.csv("/het.Na.csv",
+                 header = TRUE)
+t.test(na.het$h) 
+
+#95 percent confidence interval:
+#  0.001626849 0.001675887
+#sample estimates:
+#  mean of x 
+#0.001651368 
+
+sh.het<-read.csv("/het.Sh.csv",
+                 header = TRUE)
+t.test(sh.het$h) 
+#95 percent confidence interval:
+#  0.002205042 0.002245256
+#sample estimates:
+#  mean of x 
+#0.002225149 
+
+## then compared the distributions of heterozygosity using t-test
+t.test(sh.het$h, na.het$h)
+
+
+library(stringr)
+
+## comparing differences in haplotype diversity using code from:
+https://github.com/laninsky/genetic_diversity_diffs
+
+res<-genetic_diversity_diffs("/Arlequin",
+                             "304bp_Mmirus_HapBlockFormat.arp",
+                             1000,"Y","Y")
+                             
+                             
+## comparing diversity in ddRAD data under that section of github code                             
